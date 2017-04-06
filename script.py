@@ -18,25 +18,22 @@ def ldaLearn(X,y):
     # covmat - A single d x d learnt covariance matrix 
     
     # IMPLEMENT THIS METHOD 
-    print(X)
-    print(y)
     means = np.zeros((2,5))
+    count = 0
     classes = np.zeros(5)
-    print(np.shape(X))
     for i in y:
         for j in range(2):
-            means[j][int(i) - 1] = means[j][int(i) - 1] + X[int(i) - 1][j]
+            means[j][int(i) - 1] = means[j][int(i) - 1] + X[count][j]
+        count = count + 1
         classes[int(i) - 1] = classes[int(i) - 1] + 1
     
     for i in range(5):
         for j in range(2):
             means[j][i] = means[j][i] / classes[i]
     
-    print(classes);            
-    print(means);            
-                    
-        
-    return means,covmat
+    #print(means)
+    print(np.asarray(np.cov(np.transpose(X))))        
+    return means,np.asarray(np.cov(np.transpose(X)))
 
 def qdaLearn(X,y):
     # Inputs
@@ -48,6 +45,75 @@ def qdaLearn(X,y):
     # covmats - A list of k d x d learnt covariance matrices for each of the k classes
     
     # IMPLEMENT THIS METHOD
+    means = np.zeros((2,5))
+    classes = np.zeros(5)
+    list1 = np.zeros((2,31))
+    list2 = np.zeros((2,39))
+    list3 = np.zeros((2,29))
+    list4 = np.zeros((2,26))
+    list5 = np.zeros((2,25))
+    count = 0
+    count_1 = 0
+    count_2 = 0
+    count_3 = 0
+    count_4 = 0
+    count_5 = 0
+    for i in y:
+        for j in range(2):
+            means[j][int(i) - 1] = means[j][int(i) - 1] + X[count][j]
+        if(i == 1):
+            list1[0][count_1] = X[count][0]
+            list1[1][count_1] = X[count][1]
+            count_1 = count_1 + 1
+            
+        if(i == 2):
+            list2[0][count_2] = X[count][0]
+            list2[1][count_2] = X[count][1]
+            count_2 = count_2 + 1
+            
+        if(i == 3):
+            list3[0][count_3] = X[count][0]
+            list3[1][count_3] = X[count][1]
+            count_3 = count_3 + 1
+            
+        if(i == 4):
+            list4[0][count_4] = X[count][0]
+            list4[1][count_4] = X[count][1]
+            count_4 = count_4 + 1
+            
+        if(i == 5):
+            list5[0][count_5] = X[count][0]
+            list5[1][count_5] = X[count][1]
+            count_5 = count_5 + 1
+                
+        count = count + 1
+        classes[int(i) - 1] = classes[int(i) - 1] + 1
+    
+    for i in range(5):
+        for j in range(2):
+            means[j][i] = means[j][i] / classes[i]
+    
+    count = 0
+    covariance_sum = np.zeros((2,5))    
+    for i in y:
+        for j in range(2):
+            covariance_sum[j][int(i) - 1] = covariance_sum[j][int(i) - 1] + ((X[count][j] - means[j][int(i) - 1]) * (X[count][j] - means[j][int(i) - 1])) 
+        count = count + 1
+    
+    for i in range(5):
+        for j in range(2):
+            covariance_sum[j][i] = covariance_sum[j][i] / classes[i] 
+    
+    covmat = []
+    covmat.append(np.cov(list1))
+    covmat.append(np.cov(list2))
+    covmat.append(np.cov(list3))
+    covmat.append(np.cov(list4))
+    covmat.append(np.cov(list5))
+            
+    #print(covariance_sum)
+    print(np.asarray(covmat))    
+            
     return means,covmats
 
 def ldaTest(means,covmat,Xtest,ytest):
@@ -60,6 +126,54 @@ def ldaTest(means,covmat,Xtest,ytest):
     # ypred - N x 1 column vector indicating the predicted labels
 
     # IMPLEMENT THIS METHOD
+    covmat_inv = np.linalg.inv(covmat) 
+    final_answer = np.zeros((100,5))
+    for i in range(5):
+        list_mean = [means[0][i],means[1][i]]
+        for j in range(100):
+            list_test = [Xtest[j][0], Xtest[j][1]]
+            intermediate_sub = np.subtract(list_test,list_mean); 
+            final_answer[j][i] = np.dot(np.dot(np.transpose(intermediate_sub),covmat_inv),intermediate_sub)
+    
+    ypred= np.argmax(final_answer, 1) + 1
+    print(ytest)
+    acc = 0
+    for i in range(100):
+        print(ypred[i]," ",ytest[i])
+        if ypred[i] == ytest[i]:
+            acc = acc + 1
+     
+    print(acc)       
+#    list_1 = np.zeros((2,100))
+#    for i in range(100):
+#        for j in range(2):
+#            list_1[j][i] = means[j][0]
+#    
+#    list_2 = np.zeros((2,100))
+#    for i in range(100):
+#        for j in range(2):
+#            list_2[j][i] = means[j][1]
+#    
+#    list_3 = np.zeros((2,100))
+#    for i in range(100):
+#        for j in range(2):
+#            list_3[j][i] = means[j][2] 
+#            
+#    list_4 = np.zeros((2,100))
+#    for i in range(100):
+#        for j in range(2):
+#            list_4[j][i] = means[j][3]        
+#    
+#    list_5 = np.zeros((2,100))
+#    for i in range(100):
+#        for j in range(2):
+#            list_5[j][i] = means[j][4] 
+#    
+#    intermediate_sub1 = np.subtract(np.transpose(Xtest),list_1);  
+#    covmat_inv = np.linalg.inv(covmat) 
+#    final_answer_1 = np.dot(np.dot(np.transpose(intermediate_sub1),covmat_inv),intermediate_sub1)
+#    print(np.shape(final_answer_1))      
+    
     return acc,ypred
 
 def qdaTest(means,covmats,Xtest,ytest):
