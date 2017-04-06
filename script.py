@@ -32,7 +32,6 @@ def ldaLearn(X,y):
             means[j][i] = means[j][i] / classes[i]
     
     #print(means)
-    print(np.asarray(np.cov(np.transpose(X))))        
     return means,np.asarray(np.cov(np.transpose(X)))
 
 def qdaLearn(X,y):
@@ -104,15 +103,14 @@ def qdaLearn(X,y):
         for j in range(2):
             covariance_sum[j][i] = covariance_sum[j][i] / classes[i] 
     
-    covmat = []
-    covmat.append(np.cov(list1))
-    covmat.append(np.cov(list2))
-    covmat.append(np.cov(list3))
-    covmat.append(np.cov(list4))
-    covmat.append(np.cov(list5))
+    covmats = []
+    covmats.append(np.cov(list1))
+    covmats.append(np.cov(list2))
+    covmats.append(np.cov(list3))
+    covmats.append(np.cov(list4))
+    covmats.append(np.cov(list5))
             
     #print(covariance_sum)
-    print(np.asarray(covmat))    
             
     return means,covmats
 
@@ -127,23 +125,21 @@ def ldaTest(means,covmat,Xtest,ytest):
 
     # IMPLEMENT THIS METHOD
     covmat_inv = np.linalg.inv(covmat) 
-    final_answer = np.zeros((100,5))
+    final_answer = np.zeros((len(ytest),5))
     for i in range(5):
         list_mean = [means[0][i],means[1][i]]
-        for j in range(100):
+        for j in range(len(ytest)):
             list_test = [Xtest[j][0], Xtest[j][1]]
             intermediate_sub = np.subtract(list_test,list_mean); 
             final_answer[j][i] = np.dot(np.dot(np.transpose(intermediate_sub),covmat_inv),intermediate_sub)
     
-    ypred= np.argmax(final_answer, 1) + 1
-    print(ytest)
+    
+    ypred = np.argmin(final_answer, 1) + 1
     acc = 0
-    for i in range(100):
-        print(ypred[i]," ",ytest[i])
+    for i in range(len(ytest)):
         if ypred[i] == ytest[i]:
             acc = acc + 1
-     
-    print(acc)       
+    acc = acc / len(ytest); 
 #    list_1 = np.zeros((2,100))
 #    for i in range(100):
 #        for j in range(2):
@@ -186,6 +182,24 @@ def qdaTest(means,covmats,Xtest,ytest):
     # ypred - N x 1 column vector indicating the predicted labels
 
     # IMPLEMENT THIS METHOD
+    final_answer = np.zeros((len(ytest),5))
+    for i in range(5):
+        covmat_inv = np.linalg.inv(covmats[i]) 
+        list_mean = [means[0][i],means[1][i]]
+        for j in range(len(ytest)):
+            list_test = [Xtest[j][0], Xtest[j][1]]
+            intermediate_sub = np.subtract(list_test,list_mean); 
+            final_answer[j][i] = np.dot(np.dot(np.transpose(intermediate_sub),covmat_inv),intermediate_sub)
+            final_answer[j][i] = np.exp((-0.5) * final_answer[j][i])
+            final_answer[j][i] = final_answer[j][i] / sqrt((np.linalg.det(covmats[i])))
+            
+    ypred = np.argmax(final_answer, 1) + 1
+    acc = 0
+    for i in range(len(ytest)):
+        if ypred[i] == ytest[i]:
+            acc = acc + 1        
+    acc = acc / 100; 
+        
     return acc,ypred
 
 def learnOLERegression(X,y):
@@ -195,7 +209,8 @@ def learnOLERegression(X,y):
     # Output: 
     # w = d x 1 
 	
-    # IMPLEMENT THIS METHOD                                                   
+    # IMPLEMENT THIS METHOD
+    w = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(X),X)),np.transpose(X)),y)
     return w
 
 def learnRidgeRegression(X,y,lambd):
@@ -204,8 +219,8 @@ def learnRidgeRegression(X,y,lambd):
     # y = N x 1 
     # lambd = ridge parameter (scalar)
     # Output:                                                                  
-    # w = d x 1                                                                
-
+    # w = d x 1         
+    w = np.dot(np.dot(np.linalg.inv(np.add(lambd*np.identity(len(X[0])),np.dot(np.transpose(X),X))),np.transpose(X)),y)
     # IMPLEMENT THIS METHOD                                                   
     return w
 
@@ -218,6 +233,8 @@ def testOLERegression(w,Xtest,ytest):
     # mse
     
     # IMPLEMENT THIS METHOD
+    without_transpose = np.subtract(ytest,np.dot(Xtest,w))
+    mse = (np.dot(np.transpose(without_transpose),without_transpose))/ len(ytest) 
     return mse
 
 def regressionObjVal(w, X, y, lambd):
@@ -234,9 +251,16 @@ def mapNonLinear(x,p):
     # x - a single column vector (N x 1)                                       
     # p - integer (>= 0)                                                       
     # Outputs:                                                                 
-    # Xd - (N x (d+1)) 
-	
+    # Xd - (N x (p+1)) 
     # IMPLEMENT THIS METHOD
+    Xd = np.zeros((len(x),p+1))
+    count = 0
+    for j in x :
+        for i in range(p+1):
+            Xd[count][i] = pow(j,i)
+        count = count + 1
+    
+    print(np.shape(Xd+1))       
     return Xd
 
 # Main script
@@ -268,6 +292,7 @@ xx[:,1] = xx2.ravel()
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
 
+print(np.shape(xx))
 zacc,zldares = ldaTest(means,covmat,xx,np.zeros((xx.shape[0],1)))
 plt.contourf(x1,x2,zldares.reshape((x1.shape[0],x2.shape[0])),alpha=0.3)
 plt.scatter(Xtest[:,0],Xtest[:,1],c=ytest)
@@ -311,6 +336,8 @@ for lambd in lambdas:
     mses3_train[i] = testOLERegression(w_l,X_i,y)
     mses3[i] = testOLERegression(w_l,Xtest_i,ytest)
     i = i + 1
+
+opt_lambda = lambdas[np.argmin(mses3)]  
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
 plt.plot(lambdas,mses3_train)
@@ -320,40 +347,41 @@ plt.plot(lambdas,mses3)
 plt.title('MSE for Test Data')
 
 plt.show()
-# Problem 4
-k = 101
-lambdas = np.linspace(0, 1, num=k)
-i = 0
-mses4_train = np.zeros((k,1))
-mses4 = np.zeros((k,1))
-opts = {'maxiter' : 20}    # Preferred value.                                                
-w_init = np.ones((X_i.shape[1],1))
-for lambd in lambdas:
-    args = (X_i, y, lambd)
-    w_l = minimize(regressionObjVal, w_init, jac=True, args=args,method='CG', options=opts)
-    w_l = np.transpose(np.array(w_l.x))
-    w_l = np.reshape(w_l,[len(w_l),1])
-    mses4_train[i] = testOLERegression(w_l,X_i,y)
-    mses4[i] = testOLERegression(w_l,Xtest_i,ytest)
-    i = i + 1
-fig = plt.figure(figsize=[12,6])
-plt.subplot(1, 2, 1)
-plt.plot(lambdas,mses4_train)
-plt.plot(lambdas,mses3_train)
-plt.title('MSE for Train Data')
-plt.legend(['Using scipy.minimize','Direct minimization'])
-
-plt.subplot(1, 2, 2)
-plt.plot(lambdas,mses4)
-plt.plot(lambdas,mses3)
-plt.title('MSE for Test Data')
-plt.legend(['Using scipy.minimize','Direct minimization'])
-plt.show()
+## Problem 4
+#
+#k = 101
+#lambdas = np.linspace(0, 1, num=k)
+#i = 0
+#mses4_train = np.zeros((k,1))
+#mses4 = np.zeros((k,1))
+#opts = {'maxiter' : 20}    # Preferred value.                                                
+#w_init = np.ones((X_i.shape[1],1))
+#for lambd in lambdas:
+#    args = (X_i, y, lambd)
+#    w_l = minimize(regressionObjVal, w_init, jac=True, args=args,method='CG', options=opts)
+#    w_l = np.transpose(np.array(w_l.x))
+#    w_l = np.reshape(w_l,[len(w_l),1])
+#    mses4_train[i] = testOLERegression(w_l,X_i,y)
+#    mses4[i] = testOLERegression(w_l,Xtest_i,ytest)
+#    i = i + 1
+#fig = plt.figure(figsize=[12,6])
+#plt.subplot(1, 2, 1)
+#plt.plot(lambdas,mses4_train)
+#plt.plot(lambdas,mses3_train)
+#plt.title('MSE for Train Data')
+#plt.legend(['Using scipy.minimize','Direct minimization'])
+#
+#plt.subplot(1, 2, 2)
+#plt.plot(lambdas,mses4)
+#plt.plot(lambdas,mses3)
+#plt.title('MSE for Test Data')
+#plt.legend(['Using scipy.minimize','Direct minimization'])
+#plt.show()
 
 
 # Problem 5
 pmax = 7
-lambda_opt = 0 # REPLACE THIS WITH lambda_opt estimated from Problem 3
+lambda_opt = opt_lambda # REPLACE THIS WITH lambda_opt estimated from Problem 3
 mses5_train = np.zeros((pmax,2))
 mses5 = np.zeros((pmax,2))
 for p in range(pmax):
@@ -365,7 +393,7 @@ for p in range(pmax):
     w_d2 = learnRidgeRegression(Xd,y,lambda_opt)
     mses5_train[p,1] = testOLERegression(w_d2,Xd,y)
     mses5[p,1] = testOLERegression(w_d2,Xdtest,ytest)
-
+print(np.shape(mses5))
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
 plt.plot(range(pmax),mses5_train)
