@@ -234,17 +234,22 @@ def testOLERegression(w,Xtest,ytest):
     
     # IMPLEMENT THIS METHOD
     without_transpose = np.subtract(ytest,np.dot(Xtest,w))
-    mse = (np.dot(np.transpose(without_transpose),without_transpose))/ len(ytest) 
+    mse = (np.dot(np.transpose(without_transpose),without_transpose))/ len(ytest)
     return mse
 
 def regressionObjVal(w, X, y, lambd):
 
     # compute squared error (scalar) and gradient of squared error with respect
     # to w (vector) for the given data X and y and the regularization parameter
-    # lambda                                                                  
-
-    # IMPLEMENT THIS METHOD                                             
-    return error, error_grad
+    # lambda    
+    # IMPLEMENT THIS METHOD 
+    w = np.reshape(w,(65,1))
+    without_transpose = y - np.dot(X,w)
+    error = (np.dot(np.transpose(without_transpose),without_transpose))/ 2
+    
+    error_grad = np.dot(np.transpose(np.dot(X,w) - y),X)
+    error_grad = np.transpose(error_grad + np.transpose(lambd*w))
+    return error,np.array(error_grad).flatten()
 
 def mapNonLinear(x,p):
     # Inputs:                                                                  
@@ -260,7 +265,6 @@ def mapNonLinear(x,p):
             Xd[count][i] = pow(j,i)
         count = count + 1
     
-    print(np.shape(Xd+1))       
     return Xd
 
 # Main script
@@ -347,36 +351,36 @@ plt.plot(lambdas,mses3)
 plt.title('MSE for Test Data')
 
 plt.show()
-## Problem 4
-#
-#k = 101
-#lambdas = np.linspace(0, 1, num=k)
-#i = 0
-#mses4_train = np.zeros((k,1))
-#mses4 = np.zeros((k,1))
-#opts = {'maxiter' : 20}    # Preferred value.                                                
-#w_init = np.ones((X_i.shape[1],1))
-#for lambd in lambdas:
-#    args = (X_i, y, lambd)
-#    w_l = minimize(regressionObjVal, w_init, jac=True, args=args,method='CG', options=opts)
-#    w_l = np.transpose(np.array(w_l.x))
-#    w_l = np.reshape(w_l,[len(w_l),1])
-#    mses4_train[i] = testOLERegression(w_l,X_i,y)
-#    mses4[i] = testOLERegression(w_l,Xtest_i,ytest)
-#    i = i + 1
-#fig = plt.figure(figsize=[12,6])
-#plt.subplot(1, 2, 1)
-#plt.plot(lambdas,mses4_train)
-#plt.plot(lambdas,mses3_train)
-#plt.title('MSE for Train Data')
-#plt.legend(['Using scipy.minimize','Direct minimization'])
-#
-#plt.subplot(1, 2, 2)
-#plt.plot(lambdas,mses4)
-#plt.plot(lambdas,mses3)
-#plt.title('MSE for Test Data')
-#plt.legend(['Using scipy.minimize','Direct minimization'])
-#plt.show()
+# Problem 4
+
+k = 101
+lambdas = np.linspace(0, 1, num=k)
+i = 0
+mses4_train = np.zeros((k,1))
+mses4 = np.zeros((k,1))
+opts = {'maxiter' : 20}    # Preferred value.                                                
+w_init = np.ones((X_i.shape[1],1))
+for lambd in lambdas:
+    args = (X_i, y, lambd)
+    w_l = minimize(regressionObjVal, w_init, jac=True, args=args,method='CG', options=opts)
+    w_l = np.transpose(np.array(w_l.x))
+    w_l = np.reshape(w_l,[len(w_l),1])
+    mses4_train[i] = testOLERegression(w_l,X_i,y)
+    mses4[i] = testOLERegression(w_l,Xtest_i,ytest)
+    i = i + 1
+fig = plt.figure(figsize=[12,6])
+plt.subplot(1, 2, 1)
+plt.plot(lambdas,mses4_train)
+plt.plot(lambdas,mses3_train)
+plt.title('MSE for Train Data')
+plt.legend(['Using scipy.minimize','Direct minimization'])
+
+plt.subplot(1, 2, 2)
+plt.plot(lambdas,mses4)
+plt.plot(lambdas,mses3)
+plt.title('MSE for Test Data')
+plt.legend(['Using scipy.minimize','Direct minimization'])
+plt.show()
 
 
 # Problem 5
@@ -393,7 +397,7 @@ for p in range(pmax):
     w_d2 = learnRidgeRegression(Xd,y,lambda_opt)
     mses5_train[p,1] = testOLERegression(w_d2,Xd,y)
     mses5[p,1] = testOLERegression(w_d2,Xdtest,ytest)
-print(np.shape(mses5))
+    
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
 plt.plot(range(pmax),mses5_train)
