@@ -139,37 +139,8 @@ def ldaTest(means,covmat,Xtest,ytest):
     for i in range(len(ytest)):
         if ypred[i] == ytest[i]:
             acc = acc + 1
-    acc = acc / len(ytest); 
-#    list_1 = np.zeros((2,100))
-#    for i in range(100):
-#        for j in range(2):
-#            list_1[j][i] = means[j][0]
-#    
-#    list_2 = np.zeros((2,100))
-#    for i in range(100):
-#        for j in range(2):
-#            list_2[j][i] = means[j][1]
-#    
-#    list_3 = np.zeros((2,100))
-#    for i in range(100):
-#        for j in range(2):
-#            list_3[j][i] = means[j][2] 
-#            
-#    list_4 = np.zeros((2,100))
-#    for i in range(100):
-#        for j in range(2):
-#            list_4[j][i] = means[j][3]        
-#    
-#    list_5 = np.zeros((2,100))
-#    for i in range(100):
-#        for j in range(2):
-#            list_5[j][i] = means[j][4] 
-#    
-#    intermediate_sub1 = np.subtract(np.transpose(Xtest),list_1);  
-#    covmat_inv = np.linalg.inv(covmat) 
-#    final_answer_1 = np.dot(np.dot(np.transpose(intermediate_sub1),covmat_inv),intermediate_sub1)
-#    print(np.shape(final_answer_1))      
-    
+    acc = acc / len(ytest);     
+
     return acc,ypred
 
 def qdaTest(means,covmats,Xtest,ytest):
@@ -321,13 +292,17 @@ X_i = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
 Xtest_i = np.concatenate((np.ones((Xtest.shape[0],1)), Xtest), axis=1)
 
 w = learnOLERegression(X,y)
+mle_train = testOLERegression(w,X,y)
 mle = testOLERegression(w,Xtest,ytest)
 
 w_i = learnOLERegression(X_i,y)
+mle_train_i = testOLERegression(w_i, X_i, y)
 mle_i = testOLERegression(w_i,Xtest_i,ytest)
 
 print('MSE without intercept '+str(mle))
 print('MSE with intercept '+str(mle_i))
+print('MSE without intercept train '+str(mle_train))
+print('MSE with intercept train '+str(mle_train_i))
 
 # Problem 3
 k = 101
@@ -341,7 +316,11 @@ for lambd in lambdas:
     mses3[i] = testOLERegression(w_l,Xtest_i,ytest)
     i = i + 1
 
-opt_lambda = lambdas[np.argmin(mses3)]  
+print(np.min(mses3))
+opt_lambda = lambdas[np.argmin(mses3)] 
+print(opt_lambda)
+print(mses3_train[6])
+
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
 plt.plot(lambdas,mses3_train)
@@ -358,7 +337,7 @@ lambdas = np.linspace(0, 1, num=k)
 i = 0
 mses4_train = np.zeros((k,1))
 mses4 = np.zeros((k,1))
-opts = {'maxiter' : 20}    # Preferred value.                                                
+opts = {'maxiter' : 150}    # Preferred value.                                                
 w_init = np.ones((X_i.shape[1],1))
 for lambd in lambdas:
     args = (X_i, y, lambd)
@@ -368,6 +347,7 @@ for lambd in lambdas:
     mses4_train[i] = testOLERegression(w_l,X_i,y)
     mses4[i] = testOLERegression(w_l,Xtest_i,ytest)
     i = i + 1
+    
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
 plt.plot(lambdas,mses4_train)
@@ -381,7 +361,11 @@ plt.plot(lambdas,mses3)
 plt.title('MSE for Test Data')
 plt.legend(['Using scipy.minimize','Direct minimization'])
 plt.show()
-
+print(np.min(mses4))
+print(np.min(mses4_train))
+print(lambdas[np.argmin(mses4)])
+print(mses4[7])
+print(mses4_train[7])
 
 # Problem 5
 pmax = 7
