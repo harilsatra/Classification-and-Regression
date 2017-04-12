@@ -249,6 +249,7 @@ def regressionObjVal(w, X, y, lambd):
     
     error_grad = np.dot(np.transpose(np.dot(X,w) - y),X)
     error_grad = np.transpose(error_grad + np.transpose(lambd*w))
+    #print(error)
     return error,np.array(error_grad).flatten()
 
 def mapNonLinear(x,p):
@@ -386,17 +387,23 @@ plt.show()
 # Problem 5
 pmax = 7
 lambda_opt = opt_lambda # REPLACE THIS WITH lambda_opt estimated from Problem 3
+print(opt_lambda)
 mses5_train = np.zeros((pmax,2))
 mses5 = np.zeros((pmax,2))
 for p in range(pmax):
+    print(p)
     Xd = mapNonLinear(X[:,2],p)
     Xdtest = mapNonLinear(Xtest[:,2],p)
     w_d1 = learnRidgeRegression(Xd,y,0)
     mses5_train[p,0] = testOLERegression(w_d1,Xd,y)
     mses5[p,0] = testOLERegression(w_d1,Xdtest,ytest)
+    #print('Error with No regularization : '+str(mses5[p,0]+' with value of p as: '+str(p)))
+    print(mses5_train[p,0])
     w_d2 = learnRidgeRegression(Xd,y,lambda_opt)
     mses5_train[p,1] = testOLERegression(w_d2,Xd,y)
     mses5[p,1] = testOLERegression(w_d2,Xdtest,ytest)
+    #print('Error with regularization : '+str(mses5[p,1]+' with value of p as: '+str(p)))
+    print(mses5_train[p,1])
     
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)
